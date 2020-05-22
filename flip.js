@@ -9,7 +9,7 @@ for (filename of filenames) {
     .trim()
     .split("\n");
   for (followedUserId of followedUserIds) {
-    fs.writeFileSync(`./data/channels/${followedUserId}.txt`, userId, {
+    fs.writeFileSync(`./data/channels/${followedUserId}.txt`, `${userId}\n`, {
       flag: "a",
     });
   }

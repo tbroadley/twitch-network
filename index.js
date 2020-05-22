@@ -81,6 +81,7 @@ async function paginate(path, action) {
 }
 
 function twitch(path) {
+  console.log(`GET ${path}`);
   return fetch(`https://api.twitch.tv/helix${path}`, {
     headers: {
       "Client-ID": process.env.TWITCH_CLIENT_ID,

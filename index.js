@@ -11,7 +11,7 @@ async function go() {
   const userId = (await userResponse.json()).data[0].id;
 
   console.log(`Fetching followers for ${userId}`);
-  await fetchFollowers(userId);
+  // await fetchFollowers(userId);
 
   const followerFiles = fs.readdirSync("./data/followers");
   for (index in followerFiles) {
@@ -65,37 +65,41 @@ async function fetchFollowers(userId) {
 }
 
 async function fetchFollows(userId) {
-  let nextCursor = undefined;
-
-  while (true) {
-    const followsResponse = await twitch(
-      `/users/follows?from_id=${userId}&first=100${
-        nextCursor ? `&after=${nextCursor}` : ""
-      }`
-    );
-
-    const {
-      data: follows,
-      pagination: { cursor },
-    } = await followsResponse.json();
-    nextCursor = cursor;
-
-    for (index in follows) {
-      const { to_id, to_name } = follows[index];
+  await paginate(
+    `/users/follows?from_id=${userId}&first=100`,
+    ({ to_id, to_name }) => {
       fs.writeFileSync(`./data/followers/${userId}.txt`, `${to_id}\n`, {
         flag: "a",
       });
       fs.writeFileSync(`./data/channels/${to_id}.txt`, `${to_name}\n`);
     }
+  );
+}
+
+async function paginate(path, action) {
+  let nextCursor = undefined;
+
+  while (true) {
+    const response = await twitch(
+      `${path}${nextCursor ? `&after=${nextCursor}` : ""}`
+    );
+
+    const {
+      data,
+      pagination: { cursor },
+    } = await response.json();
+    nextCursor = cursor;
+
+    for (index in data) {
+      await action(data[index]);
+    }
 
     if (nextCursor === undefined) break;
 
-    const rateLimitRemaining = followsResponse.headers.get(
-      "ratelimit-remaining"
-    );
+    const rateLimitRemaining = response.headers.get("ratelimit-remaining");
     if (rateLimitRemaining <= 0) {
       const sleepUntilRateLimitReset =
-        followsResponse.headers.get("ratelimit-reset") * 1000 - Date.now();
+        response.headers.get("ratelimit-reset") * 1000 - Date.now();
       console.log(
         `Sleeping ${sleepUntilRateLimitReset}ms until rate limit reset}`
       );

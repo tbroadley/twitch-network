@@ -21,6 +21,7 @@ for (filename of followerFilenames) {
   const login = splitFile[0];
   const follows = splitFile.slice(2);
 
+  if (follows.length > 1000) continue;
   console.log(`${login} follows ${follows.length} channels`);
 
   for (follow of follows) {

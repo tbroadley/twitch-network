@@ -1,4 +1,5 @@
 const dotenv = require("dotenv");
+const fs = require("fs");
 const fetch = require("node-fetch");
 
 dotenv.config();
@@ -43,6 +44,11 @@ async function go() {
         .map(({ from_id, from_name }) => `${from_id} ${from_name}`)
         .join("\n")
     );
+
+    for (index in followers) {
+      const { from_id, from_name } = followers[index];
+      fs.writeFileSync(`./data/followers/${from_id}.txt`, `${from_name}\n\n`);
+    }
 
     if (nextCursor === undefined) break;
 

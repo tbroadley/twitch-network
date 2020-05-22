@@ -10,7 +10,7 @@ async function go() {
   const userResponse = await twitch("/users?login=sneakyteak");
   const userId = (await userResponse.json()).data[0].id;
 
-  // fetchFollowers(userId);
+  // await fetchFollowers(userId);
 
   const followerFiles = fs.readdirSync("./data/followers");
   for (index in followerFiles) {

@@ -7,15 +7,7 @@ dotenv.config();
 go();
 
 async function go() {
-  const userResponse = await fetch(
-    "https://api.twitch.tv/helix/users?login=sneakyteak",
-    {
-      headers: {
-        "Client-ID": process.env.TWITCH_CLIENT_ID,
-        Authorization: `Bearer ${process.env.TWITCH_ACCESS_TOKEN}`,
-      },
-    }
-  );
+  const userResponse = await twitch("/users?login=sneakyteak");
   const userId = (await userResponse.json()).data[0].id;
 
   // fetchFollowers(userId);
@@ -31,16 +23,10 @@ async function fetchFollowers(userId) {
   let nextCursor = undefined;
 
   while (true) {
-    const followersResponse = await fetch(
-      `https://api.twitch.tv/helix/users/follows?to_id=${userId}&first=100${
+    const followersResponse = await twitch(
+      `/users/follows?to_id=${userId}&first=100${
         nextCursor ? `&after=${nextCursor}` : ""
-      }`,
-      {
-        headers: {
-          "Client-ID": process.env.TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${process.env.TWITCH_ACCESS_TOKEN}`,
-        },
-      }
+      }`
     );
 
     const {
@@ -76,4 +62,13 @@ async function fetchFollowers(userId) {
       );
     }
   }
+}
+
+function twitch(path) {
+  return fetch(`https://api.twitch.tv/helix${path}`, {
+    headers: {
+      "Client-ID": process.env.TWITCH_CLIENT_ID,
+      Authorization: `Bearer ${process.env.TWITCH_ACCESS_TOKEN}`,
+    },
+  });
 }

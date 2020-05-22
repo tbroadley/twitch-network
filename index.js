@@ -18,6 +18,10 @@ async function go() {
   );
   const userId = (await userResponse.json()).data[0].id;
 
+  fetchFollowers(userId);
+}
+
+async function fetchFollowers(userId) {
   let nextCursor = undefined;
 
   while (true) {

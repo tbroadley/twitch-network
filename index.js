@@ -11,7 +11,7 @@ async function go() {
   const userId = (await userResponse.json()).data[0].id;
 
   console.log(`Fetching followers for ${userId}`);
-  // await fetchFollowers(userId);
+  await fetchFollowers(userId);
 
   const followerFiles = fs.readdirSync("./data/followers");
   for (index in followerFiles) {
@@ -26,42 +26,12 @@ async function go() {
 }
 
 async function fetchFollowers(userId) {
-  let nextCursor = undefined;
-
-  while (true) {
-    const followersResponse = await twitch(
-      `/users/follows?to_id=${userId}&first=100${
-        nextCursor ? `&after=${nextCursor}` : ""
-      }`
-    );
-
-    const {
-      data: followers,
-      pagination: { cursor },
-    } = await followersResponse.json();
-    nextCursor = cursor;
-
-    for (index in followers) {
-      const { from_id, from_name } = followers[index];
+  await paginate(
+    `/users/follows?to_id=${userId}&first=100`,
+    ({ from_id, from_name }) => {
       fs.writeFileSync(`./data/followers/${from_id}.txt`, `${from_name}\n\n`);
     }
-
-    if (nextCursor === undefined) break;
-
-    const rateLimitRemaining = followersResponse.headers.get(
-      "ratelimit-remaining"
-    );
-    if (rateLimitRemaining <= 0) {
-      const sleepUntilRateLimitReset =
-        followersResponse.headers.get("ratelimit-reset") * 1000 - Date.now();
-      console.log(
-        `Sleeping ${sleepUntilRateLimitReset}ms until rate limit reset}`
-      );
-      await new Promise((resolve, reject) =>
-        setTimeout(() => resolve(), sleepUntilRateLimitReset)
-      );
-    }
-  }
+  );
 }
 
 async function fetchFollows(userId) {

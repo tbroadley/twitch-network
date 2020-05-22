@@ -68,7 +68,7 @@ async function fetchFollows(userId) {
   let nextCursor = undefined;
 
   while (true) {
-    const followersResponse = await twitch(
+    const followsResponse = await twitch(
       `/users/follows?from_id=${userId}&first=100${
         nextCursor ? `&after=${nextCursor}` : ""
       }`
@@ -77,7 +77,7 @@ async function fetchFollows(userId) {
     const {
       data: follows,
       pagination: { cursor },
-    } = await followersResponse.json();
+    } = await followsResponse.json();
     nextCursor = cursor;
 
     for (index in follows) {
@@ -90,12 +90,12 @@ async function fetchFollows(userId) {
 
     if (nextCursor === undefined) break;
 
-    const rateLimitRemaining = followersResponse.headers.get(
+    const rateLimitRemaining = followsResponse.headers.get(
       "ratelimit-remaining"
     );
     if (rateLimitRemaining <= 0) {
       const sleepUntilRateLimitReset =
-        followersResponse.headers.get("ratelimit-reset") * 1000 - Date.now();
+        followsResponse.headers.get("ratelimit-reset") * 1000 - Date.now();
       console.log(
         `Sleeping ${sleepUntilRateLimitReset}ms until rate limit reset}`
       );

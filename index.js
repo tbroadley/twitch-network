@@ -15,7 +15,7 @@ async function go() {
   const followerFiles = fs.readdirSync("./data/followers");
   for (index in followerFiles) {
     const userId = followerFiles[index].replace(".txt", "");
-    console.log(userId);
+    fetchFollows(userId);
   }
 }
 
@@ -44,6 +44,52 @@ async function fetchFollowers(userId) {
     for (index in followers) {
       const { from_id, from_name } = followers[index];
       fs.writeFileSync(`./data/followers/${from_id}.txt`, `${from_name}\n\n`);
+    }
+
+    if (nextCursor === undefined) break;
+
+    const rateLimitRemaining = followersResponse.headers.get(
+      "ratelimit-remaining"
+    );
+    if (rateLimitRemaining <= 0) {
+      const sleepUntilRateLimitReset =
+        followersResponse.headers.get("ratelimit-reset") * 1000 - Date.now();
+      console.log(
+        `Sleeping ${sleepUntilRateLimitReset}ms until rate limit reset}`
+      );
+      await new Promise((resolve, reject) =>
+        setTimeout(() => resolve(), sleepUntilRateLimitReset)
+      );
+    }
+  }
+}
+
+async function fetchFollows(userId) {
+  let nextCursor = undefined;
+
+  while (true) {
+    const followersResponse = await twitch(
+      `/users/follows?from_id=${userId}&first=100${
+        nextCursor ? `&after=${nextCursor}` : ""
+      }`
+    );
+
+    const {
+      data: follows,
+      pagination: { cursor },
+    } = await followersResponse.json();
+    nextCursor = cursor;
+
+    console.log(
+      follows.map(({ to_id, to_name }) => `${to_id} ${to_name}`).join("\n")
+    );
+
+    for (index in follows) {
+      const { to_id, to_name } = follows[index];
+      fs.writeFileSync(`./data/followers/${userId}.txt`, `${to_id}\n`, {
+        flag: "a",
+      });
+      fs.writeFileSync(`./data/channels/${to_id}.txt`, `${to_name}\n`);
     }
 
     if (nextCursor === undefined) break;

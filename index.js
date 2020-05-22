@@ -18,7 +18,13 @@ async function go() {
   );
   const userId = (await userResponse.json()).data[0].id;
 
-  fetchFollowers(userId);
+  // fetchFollowers(userId);
+
+  const followerFiles = fs.readdirSync("./data/followers");
+  for (index in followerFiles) {
+    const userId = followerFiles[index].replace(".txt", "");
+    console.log(userId);
+  }
 }
 
 async function fetchFollowers(userId) {

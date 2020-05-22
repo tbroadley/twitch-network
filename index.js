@@ -10,12 +10,18 @@ async function go() {
   const userResponse = await twitch("/users?login=sneakyteak");
   const userId = (await userResponse.json()).data[0].id;
 
-  // await fetchFollowers(userId);
+  console.log(`Fetching followers for ${userId}`);
+  await fetchFollowers(userId);
 
   const followerFiles = fs.readdirSync("./data/followers");
   for (index in followerFiles) {
     const userId = followerFiles[index].replace(".txt", "");
-    fetchFollows(userId);
+    console.log(
+      `Fetching follows for ${userId} (${Number(index) + 1}/${
+        followerFiles.length
+      })`
+    );
+    await fetchFollows(userId);
   }
 }
 
@@ -34,12 +40,6 @@ async function fetchFollowers(userId) {
       pagination: { cursor },
     } = await followersResponse.json();
     nextCursor = cursor;
-
-    console.log(
-      followers
-        .map(({ from_id, from_name }) => `${from_id} ${from_name}`)
-        .join("\n")
-    );
 
     for (index in followers) {
       const { from_id, from_name } = followers[index];
@@ -79,10 +79,6 @@ async function fetchFollows(userId) {
       pagination: { cursor },
     } = await followersResponse.json();
     nextCursor = cursor;
-
-    console.log(
-      follows.map(({ to_id, to_name }) => `${to_id} ${to_name}`).join("\n")
-    );
 
     for (index in follows) {
       const { to_id, to_name } = follows[index];

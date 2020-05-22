@@ -25,7 +25,7 @@ for (filename of followerFilenames) {
 
   for (follow of follows) {
     const followLogin = loginsByUserId[follow];
-    fs.writeFileSync(`./data/channels-by-name/${followLogin}.txt`, login, {
+    fs.writeFileSync(`./data/channels-by-name/${followLogin}.txt\n`, login, {
       flag: "a",
     });
   }
